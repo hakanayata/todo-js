@@ -1,6 +1,6 @@
 # JS Project: To Do App
 
-## Demo at: [Netlify](todo-hakan.netlify.app)
+## Demo at: [Netlify](https://todo-hakan.netlify.app)
 
 ### Description
 A To Do application, built with vanilla JS, HTML, Bootstrap.
