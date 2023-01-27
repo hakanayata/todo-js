@@ -1,3 +1,4 @@
+// DOM ELEMENTS
 const newTask = document.getElementById("new-task")
 const addBtn = document.getElementById("add-btn")
 const message = document.getElementById("message")
@@ -6,21 +7,16 @@ const list = document.getElementById("list")
 const totalTasks = document.getElementById("total-tasks")
 const tasksDone = document.getElementById("tasks-done")
 
-let idNoList = []
-let idNo = 0
+// LOCAL STORAGE
+let todo_list = JSON.parse(localStorage.getItem("todo_list")) ?? []
 
-let todoCounter = 0
-let markedDone = 0
-
-function hideListIfEmpty() {
-    if (listGroup.innerText === '') {
-        list.style.visibility = "hidden"
-    } else {
-        list.style.visibility = "visible"
-    }
-}
-
+// EVENTS
 window.addEventListener('DOMContentLoaded', () => {
+    if (todo_list.length > 0) {
+        for (let i = 0; i < todo_list.length; i++) {
+            createNewListItem(todo_list[i])
+        }
+    }
     hideListIfEmpty()
 })
 
@@ -32,121 +28,103 @@ newTask.addEventListener('keypress', (e) => {
 
 addBtn.addEventListener('click', () => {
 
-    let newTaskContent = newTask.value.trim()
+    let taskContent = newTask.value.trim()
 
-    if (newTaskContent && newTaskContent !== '') {
-        if (document.getElementById("place-holder-item")) {
-            document.getElementById("place-holder-item").remove()
-        }
+    if (taskContent && taskContent !== '') {
 
         // make div visible
         list.style.visibility = 'visible'
+
         // create new list item
-        createNewListItem()
+        createNewListItem(taskContent)
+        todo_list.push(taskContent)
+
         // update total number of tasks
-        totalTasks.innerText = listGroup.childElementCount
+        totalTasksUpdate()
+
+        // update localStorage
+        storageUpdate(todo_list)
+
         // flush the input field
         newTask.value = ''
         message.textContent = ''
+        message.style.display = 'none'
     } else {
         newTask.value = ''
-        message.textContent = "Invalid Input!"
+        message.style.display = 'block'
+        message.textContent = "Invalid input!"
     }
 })
 
-
-function getNewID() {
-    if (idNoList.length === 0) {
-        idNo = 0
-    } else {
-        for (let i = 0; i < idNoList.length; i++) {
-            if (idNo === idNoList[i]) {
-                idNo = Math.max(...idNoList) + 1
-            } else {
-                idNo = idNo
-            }
-        }
-    }
-    idNoList.push(idNo)
-    return idNo
-}
-
-function createNewListItem() {
-
-    let newID = getNewID()
-
-    let taskContent = newTask.value
+// FUNCTIONS
+function createNewListItem(taskContent) {
     // new list item
     let new_task = document.createElement("li")
     new_task.setAttribute("class", "d-flex align-items-center justify-content-between list-group-item")
-    new_task.setAttribute("id", `task-${newID}`)
     new_task.textContent = taskContent
 
     // check mark button
     let new_check_button = document.createElement("button")
     new_check_button.setAttribute("class", "btn py-0")
-    new_check_button.setAttribute("id", `strikeBtn-${newID}`)
-    new_check_button.setAttribute("onclick", "markDone(this.id)")
-    let new_check = document.createElement("i")
-    new_check.setAttribute("class", "fa-regular fa-circle-check px-2")
-    new_check_button.appendChild(new_check)
+    new_check_button.setAttribute("onclick", "onMarkDoneItemClick(this)")
+    let new_check_icon = document.createElement("i")
+    new_check_icon.setAttribute("class", "fa-regular fa-circle-check px-2")
+    new_check_button.appendChild(new_check_icon)
 
     // trash mark button
     let new_trash_button = document.createElement("button")
     new_trash_button.setAttribute("class", "btn py-0")
-    new_trash_button.setAttribute("id", `delBtn-${newID}`)
-    new_trash_button.setAttribute("onclick", "deleteItem(this.id)")
-    let new_trash = document.createElement("i")
-    new_trash.setAttribute("class", "fa-solid fa-trash px-2")
-    new_trash_button.append(new_trash)
+    new_trash_button.setAttribute("onclick", "onDeleteItemClick(this)")
+    let new_trash_icon = document.createElement("i")
+    new_trash_icon.setAttribute("class", "fa-solid fa-trash px-2")
+    new_trash_button.append(new_trash_icon)
 
     // buttons div
     let icon_div = document.createElement("div")
     icon_div.appendChild(new_check_button)
     icon_div.appendChild(new_trash_button)
 
-    // append icon div to list element
+    // append icon div to list item
     new_task.appendChild(icon_div)
 
     // add new list item to unordered list group
     listGroup.appendChild(new_task)
 }
 
-function markDone(id) {
-    id = Number(id.split("-")[1])
-    el = document.getElementById(`task-${id}`)
-
-    if (el.style.textDecoration === "line-through") {
-        el.style.color = "#212529"
-        el.style.textDecoration = "none"
-        // update number of tasks done
-        markedDone--;
-        tasksDone.innerText = markedDone
+function hideListIfEmpty() {
+    if (listGroup.innerText === '') {
+        list.style.visibility = "hidden"
     } else {
-        el.style.color = "rgb(170,170,170)"
-        el.style.textDecoration = "line-through"
-        // update number of tasks done
-        markedDone++
-        tasksDone.innerText = markedDone
+        list.style.visibility = "visible"
     }
 }
 
-function deleteItem(id) {
-    id = Number(id.split("-")[1])
-    el = document.getElementById(`task-${id}`)
-    // update total number of tasks marked done
-
-    if (el.style.textDecoration === "line-through") {
-        markedDone--;
-    }
-    el.remove()
-    tasksDone.innerText = markedDone
-
-    // update total number of tasks
-    totalTasks.innerText = listGroup.childElementCount
-
+function onDeleteItemClick(item) {
+    let item_to_delete = item.closest(".list-group-item")
+    let content = item_to_delete.textContent
+    // remove from DOM
+    item_to_delete.remove()
+    // remove from todo list
+    todo_list = todo_list.filter(i => i !== content)
+    storageUpdate(todo_list)
+    totalTasksUpdate()
+    tasksDoneUpdate()
     hideListIfEmpty()
+}
 
-    // remove its ID from idNoList
-    idNoList = idNoList.filter(item => item != id)
+function onMarkDoneItemClick(item) {
+    item.closest(".list-group-item").classList.toggle("checked")
+    tasksDoneUpdate()
+}
+
+function storageUpdate(list) {
+    localStorage.setItem("todo_list", JSON.stringify(list))
+}
+
+function tasksDoneUpdate() {
+    tasksDone.innerText = Array.from(document.querySelectorAll(".checked")).length
+}
+
+function totalTasksUpdate() {
+    totalTasks.textContent = listGroup.childElementCount
 }

@@ -1,0 +1,10 @@
+.checked {
+    text-decoration: line-through !important;
+    color: rgb(170, 170, 170) !important;
+}
+
+#message {
+    line-height: 1rem;
+    vertical-align: middle;
+    display: none;
+}
