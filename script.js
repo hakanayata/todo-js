@@ -17,6 +17,8 @@ window.addEventListener('DOMContentLoaded', () => {
             createNewListItem(todo_list[i])
         }
     }
+    totalTasksUpdate()
+    tasksDoneUpdate()
     hideListIfEmpty()
 })
 
