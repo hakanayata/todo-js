@@ -9,12 +9,15 @@ const tasksDone = document.getElementById("tasks-done")
 
 // LOCAL STORAGE
 let todo_list = JSON.parse(localStorage.getItem("todo_list")) ?? []
+// console.log("start", todo_list)
 
 // EVENTS
 window.addEventListener('DOMContentLoaded', () => {
     if (todo_list.length > 0) {
         for (let i = 0; i < todo_list.length; i++) {
-            createNewListItem(todo_list[i])
+            if (todo_list[i] !== null) {
+                createNewListItem(todo_list[i])
+            }
         }
     }
     totalTasksUpdate()
@@ -28,18 +31,30 @@ newTask.addEventListener('keypress', (e) => {
     }
 })
 
+let invalidInputCounter = 0;
+
 addBtn.addEventListener('click', () => {
 
     let taskContent = newTask.value.trim()
 
     if (taskContent && taskContent !== '') {
 
+        invalidInputCounter = 0
+
         // make div visible
         list.style.visibility = 'visible'
 
+        // task obj
+        const task = {
+            "text": taskContent,
+            "checked": false,
+        }
+
         // create new list item
-        createNewListItem(taskContent)
-        todo_list.push(taskContent)
+        createNewListItem(task)
+
+        // add item to the array
+        todo_list.push(task)
 
         // update total number of tasks
         totalTasksUpdate()
@@ -50,20 +65,41 @@ addBtn.addEventListener('click', () => {
         // flush the input field
         newTask.value = ''
         message.textContent = ''
-        message.style.display = 'none'
+        message.style.visibility = 'hidden'
+
     } else {
         newTask.value = ''
-        message.style.display = 'block'
+        console.log("in", invalidInputCounter)
+        if (invalidInputCounter > 0 && invalidInputCounter % 2 == 1) {
+            message.classList.remove("alert-primary")
+            message.classList.add("alert-danger")
+        } else {
+            if (message.classList.contains("alert-danger"))
+                message.classList.remove("alert-danger")
+        }
+        invalidInputCounter++;
+        console.log("out", invalidInputCounter)
+        message.classList.add("alert-primary")
         message.textContent = "Invalid input!"
+        message.style.visibility = 'visible'
     }
 })
 
 // FUNCTIONS
-function createNewListItem(taskContent) {
+function createNewListItem(task) {
+    // obj todo
+    const todo = {
+        "text": task.text,
+        "checked": task.checked ?? false,
+    }
+
     // new list item
     let new_task = document.createElement("li")
     new_task.setAttribute("class", "d-flex align-items-center justify-content-between list-group-item")
-    new_task.textContent = taskContent
+    new_task.textContent = todo.text
+    if (todo.checked === true) {
+        new_task.classList.add("checked")
+    }
 
     // check mark button
     let new_check_button = document.createElement("button")
@@ -106,8 +142,11 @@ function onDeleteItemClick(item) {
     let content = item_to_delete.textContent
     // remove from DOM
     item_to_delete.remove()
+
     // remove from todo list
-    todo_list = todo_list.filter(i => i !== content)
+    todo_list = todo_list.filter(todo => todo.text != content)
+
+    console.log(todo_list)
     storageUpdate(todo_list)
     totalTasksUpdate()
     tasksDoneUpdate()
@@ -116,6 +155,14 @@ function onDeleteItemClick(item) {
 
 function onMarkDoneItemClick(item) {
     item.closest(".list-group-item").classList.toggle("checked")
+    // console.log(item.closest(".list-group-item").textContent)
+    // toggle task's "checked" property on click
+    for (const key of Object.keys(todo_list)) {
+        if (todo_list[key].text === item.closest(".list-group-item").textContent) {
+            todo_list[key].checked = !todo_list[key].checked
+        }
+    }
+    storageUpdate(todo_list)
     tasksDoneUpdate()
 }
 

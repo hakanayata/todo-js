@@ -3,8 +3,16 @@
     color: rgb(170, 170, 170) !important;
 }
 
+.checked .fa-circle-check {
+    color: #0b0
+}
+
 #message {
-    line-height: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: .9rem;
+    height: .5rem;
+    line-height: .5rem;
     vertical-align: middle;
-    display: none;
+    visibility: hidden;
 }
